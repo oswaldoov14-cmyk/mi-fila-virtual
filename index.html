@@ -139,29 +139,16 @@
   <button class="btn btn-secondary" style="color:#c0392b;border-color:#f5c6c6" onclick="resetTodo()">🗑 Limpiar todos los turnos</button>
 </div>
 
-<!-- SCRIPT MODIFICADO PARA USAR FIREBASE -->
+<!-- SCRIPT MODIFICADO PARA USAR SUPABASE Y EVOLUCIONAR A SAAS -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA8N6qjqZGJZ0QLd_GU9vkRxlY3PPHfhX8",
-  authDomain: "sistema-de-registro-46c81.firebaseapp.com",
-  projectId: "sistema-de-registro-46c81",
-  storageBucket: "sistema-de-registro-46c81.firebasestorage.app",
-  messagingSenderId: "253266066950",
-  appId: "1:253266066950:web:8ad2950b3548c488058d87",
-  measurementId: "G-J41E4MB5LJ"
-};
-
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const supabaseUrl = 'https://drsjneaesdklijaiwgnh.supabase.co'
+const supabaseKey = 'sb_publishable_X7RwnfyfS1lM5IIpreN53g_Y0FBIuWD'
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 const WA_NEGOCIO = '524731626172';
 let tabActual = 'espera';
-
-// Variable global que se sincronizará mágicamenete con Firebase
 let turnosGlobal = [];
 
 window.waIcon = function(size){
@@ -192,22 +179,19 @@ window.registrar = async function(){
   if(!nombre||!tel){err.textContent='Por favor llena todos los campos.';err.style.display='block';return}
   err.style.display='none';
   
-  // El número de turno es el total actual + 1
   const num = turnosGlobal.length + 1;
   const hora = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
   const reg = { num, nombre, tel, hora, atendido: false, timestamp: Date.now() };
   
-  // Limpiar campos
   document.getElementById('inp-nombre').value='';
   document.getElementById('inp-tel').value='';
   
-  // Guardamos en Firebase cloud DB (esto desencadenará la actualización)
-  try {
-    await addDoc(collection(db, "turnos"), reg);
+  const { error } = await supabase.from('turnos').insert([reg]);
+  if(error) {
+    console.error("Error guardando turno: ", error);
+    alert("Hubo un error al guardar tu turno en internet. Revisa Supabase.");
+  } else {
     window.mostrarTurno(reg);
-  } catch(e) {
-    console.error("Error guardando turno: ", e);
-    alert("Hubo un error al guardar tu turno en internet. Revisa los permisos de Firebase.");
   }
 }
 
@@ -337,41 +321,50 @@ window.renderAdmin = function(){
 }
 
 window.atender = async function(id){
-  const turnoRef = doc(db, "turnos", id);
-  await updateDoc(turnoRef, { atendido: true });
+  await supabase.from('turnos').update({ atendido: true }).eq('id', id);
 }
 
 window.resetTodo = async function(){
   if(confirm('¿Seguro que deseas borrar todos los turnos? Esta acción no se puede deshacer y borrará la base de datos.')){
     for(const t of turnosGlobal){
-       await deleteDoc(doc(db, "turnos", t.id));
+       await supabase.from('turnos').delete().eq('id', t.id);
     }
   }
 }
 
 // ======================================
-// ESCUCHA EN TIEMPO REAL A FIREBASE
+// ESCUCHA EN TIEMPO REAL A SUPABASE
 // ======================================
-// onSnapshot es la magia que lee de la base de datos cada vez que hay un cambio.
-const q = query(collection(db, "turnos"), orderBy("timestamp", "asc"));
-onSnapshot(q, (snapshot) => {
-  const nuevosTurnos = [];
-  snapshot.forEach((doc) => {
-    nuevosTurnos.push({ id: doc.id, ...doc.data() });
-  });
-  turnosGlobal = nuevosTurnos;
-  
-  // Si el panel de admin está abierto, refrescarlo mágicamente
+async function cargarDatosIniciales() {
+  const { data, error } = await supabase.from('turnos').select('*').order('timestamp', { ascending: true });
+  if (data) {
+    turnosGlobal = data;
+    actualizarVistas();
+  }
+}
+
+function actualizarVistas() {
   if(document.getElementById('admin-screen').style.display === 'block'){
     window.renderAdmin();
   }
-  
-  // Si el cliente está viendo su ficha de turno, actualizar sus "faltantes" mágicamente
   const turnoPantalla = parseInt(document.getElementById('mi-turno').textContent);
   if(!isNaN(turnoPantalla)){
     window.actualizarFaltantes(turnoPantalla);
   }
-});
+}
+
+// Cargar al inicio
+cargarDatosIniciales();
+
+// Suscribirse a cambios en tiempo real ("Pantalla en Vivo")
+supabase
+  .channel('public:turnos')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'turnos' }, payload => {
+    // Cada vez que hay un nuevo registro o alguien es atendido, recargamos la info
+    cargarDatosIniciales();
+  })
+  .subscribe()
+
 </script>
 </body>
 </html>
