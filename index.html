@@ -307,7 +307,7 @@ window.registrar = async function(){
 
   const num = numHoy + 1;
   const hora = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-  const reg = { num, nombre, tel, hora, atendido: false, cancelado: false, costo_final: 0 };
+  const reg = { num, nombre, tel, hora, atendido: false, cancelado: false, costo_final: 0, timestamp: Date.now() };
   
   const { data, error } = await supabase.from('turnos').insert([reg]).select();
   
@@ -691,12 +691,12 @@ function verificarSesionCliente() {
 }
 
 async function cargarDatosIniciales(forzarHistorialCompleto = false) {
-  let q = supabase.from('turnos').select('*').order('created_at', { ascending: true });
+  let q = supabase.from('turnos').select('*').order('timestamp', { ascending: true });
   
   if(!forzarHistorialCompleto) {
      const hoyEmpieza = new Date();
      hoyEmpieza.setHours(0,0,0,0);
-     q = q.gte('created_at', hoyEmpieza.toISOString());
+     q = q.gte('timestamp', hoyEmpieza.getTime());
   }
   
   const { data, error } = await q;
