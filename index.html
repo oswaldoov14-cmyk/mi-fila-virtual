@@ -60,6 +60,14 @@
   .error-msg{font-size:13px;color:#c0392b;margin-top:8px;text-align:center;display:none}
   .acciones{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0}
   .divider{height:1px;background:#f0f0f0;margin:1rem 0}
+  .modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center; }
+  .modal-overlay.show { display:flex; animation: fadeIn 0.2s }
+  .modal-content { background:#fff; padding:1.5rem; border-radius:12px; width:90%; max-width:320px; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
+  .modal-content h3 { margin-bottom:1rem; font-size:18px; color:#1a1a1a; }
+  .modal-content input { margin-bottom:1rem; font-size:16px; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; outline:none; }
+  .modal-content input:focus { border-color:#1D9E75; }
+  .modal-btns { display:flex; gap:8px; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 </style>
 </head>
 <body>
@@ -76,7 +84,7 @@
   </div>
   <div class="form-group">
     <label>Número de teléfono (OPCIONAL)</label>
-    <input type="tel" id="inp-tel" placeholder="Ej. 473 162 6172" />
+    <input type="tel" id="inp-tel" placeholder="" />
   </div>
   <button class="btn btn-primary" onclick="registrar()">Obtener mi turno</button>
   <div class="error-msg" id="form-error"></div>
@@ -111,8 +119,7 @@
     🎉 <strong style="display:block; font-size:24px; margin-bottom:4px">¡ES TU TURNO!</strong> Por favor pasa a la silla principal.
   </div>
 
-  <button class="btn btn-secondary" id="btn-refrescar" onclick="refrescarEstado()">🔄 Actualizar estado</button>
-  <button class="btn btn-secondary" style="margin-top:6px" onclick="volverForm()">Registrar otra persona</button>
+  <button class="btn btn-secondary" onclick="volverForm()">Registrar otra persona</button>
 </div>
 
 <!-- ===== PANEL DE ADMINISTRADOR ===== -->
@@ -129,11 +136,30 @@
   </div>
   <div class="tab-bar">
     <button class="tab active" id="tab-esp" onclick="setTab('espera')">En espera</button>
-    <button class="tab" id="tab-at" onclick="setTab('atendidos')">Historial de Hoy</button>
+    <button class="tab" id="tab-at" onclick="setTab('atendidos')">Historial / Reportes</button>
   </div>
+  
+  <select id="filtro-fecha" onchange="window.renderAdmin()" style="display:none; margin-bottom:10px; width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-size:14px;">
+    <option value="hoy">📅 Solo lo de Hoy</option>
+    <option value="ayer">📅 Lo de Ayer</option>
+    <option value="7dias">📅 Últimos 7 días</option>
+    <option value="todos">📅 Todo el historial</option>
+  </select>
+  
   <div id="lista-turnos"></div>
   <div class="divider"></div>
-  <button class="btn btn-secondary" style="color:#c0392b;border-color:#f5c6c6" onclick="resetTodo()">🗑 Limpiar base de datos (Nuevo día)</button>
+</div>
+
+<!-- MODAL DE COBRO -->
+<div class="modal-overlay" id="modal-cobro">
+  <div class="modal-content">
+    <h3>💸 Ingresa el monto a cobrar</h3>
+    <input type="number" id="inp-monto-cobro" placeholder="Ej. 85" value="85" />
+    <div class="modal-btns">
+      <button class="btn btn-secondary" style="margin-top:0" onclick="cerrarModalCobro()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarCobro()">Confirmar</button>
+    </div>
+  </div>
 </div>
 
 <!-- SCRIPT DE SUPABASE Y LÓGICA FINANCIERA -->
@@ -226,13 +252,6 @@ window.actualizarFaltantes = function(miNum){
   }
 }
 
-window.refrescarEstado = async function(){
-  const btn = document.getElementById('btn-refrescar');
-  btn.textContent = '🔄 Cargando...';
-  await cargarDatosIniciales();
-  btn.textContent = '🔄 Actualizar estado';
-}
-
 window.irAdmin = function(){
   const clave = prompt("Ingresa la clave de administrador:");
   if (clave === "skinny123") {
@@ -259,7 +278,19 @@ window.setTab = function(t){
   tabActual=t;
   document.getElementById('tab-esp').className='tab'+(t==='espera'?' active':'');
   document.getElementById('tab-at').className='tab'+(t==='atendidos'?' active':'');
+  document.getElementById('filtro-fecha').style.display = t==='atendidos' ? 'block' : 'none';
   window.renderAdmin();
+}
+
+function isInTimeRange(ts, range) {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const yesterdayStart = todayStart - 86400000;
+  
+  if(range === 'hoy') return ts >= todayStart;
+  if(range === 'ayer') return ts >= yesterdayStart && ts < todayStart;
+  if(range === '7dias') return ts >= (todayStart - 7 * 86400000);
+  return true;
 }
 
 window.renderAdmin = function(){
@@ -278,9 +309,12 @@ window.renderAdmin = function(){
   document.getElementById('st-caja').textContent= '$' + caja;
 
   const lista = document.getElementById('lista-turnos');
-  // En Historial mostraremos los atendidos y cancelados combinados, ordenados por hora
   const historialAll = [...atendidos, ...cancelados].sort((a,b)=>b.timestamp-a.timestamp);
-  const arr = tabActual==='espera' ? enEspera : historialAll;
+  
+  const filtroRango = document.getElementById('filtro-fecha').value;
+  const filteredHistorial = historialAll.filter(t => isInTimeRange(t.timestamp, filtroRango));
+  
+  const arr = tabActual==='espera' ? enEspera : filteredHistorial;
   
   if(arr.length===0){lista.innerHTML='<div class="empty">No hay personas en esta lista</div>';return}
 
@@ -312,15 +346,28 @@ window.renderAdmin = function(){
   }).join('');
 }
 
-window.atender = async function(id){
-  const monto = prompt("💸 ¿Cuánto vas a cobrar por este servicio?", "85");
-  if(monto !== null) {
-     const parseado = parseInt(monto);
-     // Verificamos que metió un número
-     if(isNaN(parseado)) { alert("Por favor ingresa una cantidad numérica válida"); return; }
-     
-     // Disparamos a la base de datos
-     await supabase.from('turnos').update({ atendido: true, costo_final: parseado }).eq('id', id);
+let turnoACobrar = null;
+
+window.atender = function(id){
+  turnoACobrar = id;
+  document.getElementById('modal-cobro').classList.add('show');
+  document.getElementById('inp-monto-cobro').focus();
+}
+
+window.cerrarModalCobro = function(){
+  document.getElementById('modal-cobro').classList.remove('show');
+  turnoACobrar = null;
+}
+
+window.confirmarCobro = async function(){
+  const monto = document.getElementById('inp-monto-cobro').value.trim();
+  const parseado = parseInt(monto);
+  if(isNaN(parseado) || parseado < 0) { alert("Por favor ingresa un monto válido"); return; }
+  
+  if(turnoACobrar) {
+    const idTemp = turnoACobrar;
+    cerrarModalCobro();
+    await supabase.from('turnos').update({ atendido: true, costo_final: parseado, barbero: 'Invitado' }).eq('id', idTemp);
   }
 }
 
@@ -330,17 +377,29 @@ window.cancelar = async function(id){
   }
 }
 
-window.resetTodo = async function(){
-  if(confirm('¿Seguro que deseas borrar todos los turnos para inciar un nuevo día?')){
-    for(const t of turnosGlobal){
-       await supabase.from('turnos').delete().eq('id', t.id);
-    }
-  }
+function tocarCampana() {
+  try {
+    const context = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = context.createOscillator();
+    const gainNode = context.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(context.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, context.currentTime); 
+    osc.frequency.exponentialRampToValueAtTime(440, context.currentTime + 0.5);
+    gainNode.gain.setValueAtTime(0, context.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.5, context.currentTime + 0.05); 
+    gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 1.5); 
+    osc.start();
+    osc.stop(context.currentTime + 1.5);
+  } catch(e) {}
 }
 
 // ======================================
 // ESCUCHA EN TIEMPO REAL A SUPABASE
 // ======================================
+let countEsperaAnterior = -1;
+
 async function cargarDatosIniciales() {
   const { data, error } = await supabase.from('turnos').select('*').order('timestamp', { ascending: true });
   if (data) {
@@ -350,6 +409,15 @@ async function cargarDatosIniciales() {
 }
 
 function actualizarVistas() {
+  const enEspera = turnosGlobal.filter(t=>!t.atendido && !t.cancelado);
+  
+  if (countEsperaAnterior !== -1 && enEspera.length > countEsperaAnterior) {
+    if(document.getElementById('admin-screen').style.display === 'block'){
+       tocarCampana();
+    }
+  }
+  countEsperaAnterior = enEspera.length;
+
   if(document.getElementById('admin-screen').style.display === 'block'){
     window.renderAdmin();
   }
