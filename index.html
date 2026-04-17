@@ -258,13 +258,15 @@ window.showToast = function(msg, type = 'success') {
   setTimeout(() => t.remove(), 3000); 
 }
 
-const getDbTime = (t) => {
-  if(t.created_at) return new Date(t.created_at).getTime();
-  if(t.timestamp) return t.timestamp; 
-  return 0; 
-};
-
 // --- Inteligencia UI Local ---
+const getDbTime = (t) => {
+  if (t.created_at) return new Date(t.created_at).getTime();
+  if (t.timestamp) {
+     if (typeof t.timestamp === 'string' && t.timestamp.includes('-')) return new Date(t.timestamp).getTime();
+     return parseInt(t.timestamp);
+  }
+  return Date.now(); // Fallback absoluto
+};
 function getColorFromHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -691,17 +693,28 @@ function verificarSesionCliente() {
 }
 
 async function cargarDatosIniciales(forzarHistorialCompleto = false) {
-  let q = supabase.from('turnos').select('*').order('timestamp', { ascending: true });
+  // Obtenemos los últimos 1000 registros puros sin filtros que puedan romper PostgREST
+  const { data, error } = await supabase.from('turnos').select('*').limit(1000);
   
-  if(!forzarHistorialCompleto) {
-     const hoyEmpieza = new Date();
-     hoyEmpieza.setHours(0,0,0,0);
-     q = q.gte('timestamp', hoyEmpieza.getTime());
+  if(error) {
+     window.showToast("Error de conexión a Base de Datos: " + error.message, "error");
+     console.error("Supabase Error:", error);
+     return;
   }
   
-  const { data, error } = await q;
-  if (!error && data) {
+  if (data) {
     turnosGlobal = data;
+    
+    // 1. ORDENAMIENTO LOCAL JS
+    turnosGlobal.sort((a,b) => getDbTime(a) - getDbTime(b));
+    
+    // 2. FILTRADO LOCAL JS (Delega el trabajo al celular, no a la nube)
+    if(!forzarHistorialCompleto) {
+       const hoyEmpieza = new Date();
+       hoyEmpieza.setHours(0,0,0,0);
+       turnosGlobal = turnosGlobal.filter(t => getDbTime(t) >= hoyEmpieza.getTime());
+    }
+
     actualizarVistas();
     if(!forzarHistorialCompleto) verificarSesionCliente();
   }
