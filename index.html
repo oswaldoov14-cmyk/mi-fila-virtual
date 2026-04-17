@@ -83,7 +83,7 @@
     <input type="text" id="inp-nombre" placeholder="Ej. Juan Pérez" />
   </div>
   <div class="form-group">
-    <label>Número de teléfono (OPCIONAL)</label>
+    <label>Número de teléfono</label>
     <input type="tel" id="inp-tel" placeholder="" />
   </div>
   <button class="btn btn-primary" onclick="registrar()">Obtener mi turno</button>
@@ -180,19 +180,27 @@ window.registrar = async function(){
   if(!nombre){err.textContent='Por favor ingresa al menos tu nombre.';err.style.display='block';return}
   err.style.display='none';
   
-  const num = turnosGlobal.length + 1; // Un contador de turno general para todo el día
+  const numHoy = turnosGlobal.filter(t => {
+     const ts = new Date(t.timestamp);
+     const hoy = new Date();
+     return ts.getDate() === hoy.getDate() && ts.getMonth() === hoy.getMonth() && ts.getFullYear() === hoy.getFullYear();
+  }).length;
+
+  const num = numHoy + 1;
   const hora = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
   const reg = { num, nombre, tel, hora, atendido: false, cancelado: false, costo_final: 0, timestamp: Date.now() };
   
   document.getElementById('inp-nombre').value='';
   document.getElementById('inp-tel').value='';
   
-  const { error } = await supabase.from('turnos').insert([reg]);
+  const { data, error } = await supabase.from('turnos').insert([reg]).select();
   if(error) {
     console.error("Error guardando turno: ", error);
     alert("Hubo un error al guardar tu turno en internet. Contacta a la barbería.");
   } else {
-    window.mostrarTurno(reg);
+    // Añadimos el nuevo ticket localmente al instante
+    turnosGlobal.push(data[0]);
+    window.mostrarTurno(data[0]);
   }
 }
 
@@ -207,9 +215,15 @@ window.mostrarTurno = function(reg){
 }
 
 window.actualizarFaltantes = function(miNum){
-  // Solo se toma en cuenta a los que mágicamente están en la fila (esperando, sin haber cancelado)
-  const activos = turnosGlobal.filter(t=>!t.atendido && !t.cancelado).sort((a,b)=>a.timestamp-b.timestamp);
-  const miReg = turnosGlobal.find(t=>t.num===miNum);
+  const hoy = new Date();
+  const esHoy = (ts) => {
+     const d = new Date(ts);
+     return d.getDate()===hoy.getDate() && d.getMonth()===hoy.getMonth() && d.getFullYear()===hoy.getFullYear();
+  };
+  
+  const activos = turnosGlobal.filter(t=>!t.atendido && !t.cancelado && esHoy(t.timestamp)).sort((a,b)=>a.timestamp-b.timestamp);
+  const miReg = turnosGlobal.find(t=>t.num===miNum && esHoy(t.timestamp));
+  
   const box = document.getElementById('faltantes-box');
   const n = document.getElementById('faltantes-num');
   const t = document.getElementById('faltantes-txt');
@@ -294,27 +308,32 @@ function isInTimeRange(ts, range) {
 }
 
 window.renderAdmin = function(){
-  // Separamos a los clientes por categorías
-  const enEspera = turnosGlobal.filter(t=>!t.atendido && !t.cancelado).sort((a,b)=>a.timestamp-b.timestamp);
-  const atendidos = turnosGlobal.filter(t=>t.atendido);
-  const cancelados = turnosGlobal.filter(t=>t.cancelado);
+  const filtroRango = document.getElementById('filtro-fecha').value;
   
-  // Financiero: Sumamos costos
+  let validForStats = turnosGlobal;
+  if(tabActual === 'atendidos') {
+      validForStats = turnosGlobal.filter(t => isInTimeRange(t.timestamp, filtroRango));
+  } else {
+      validForStats = turnosGlobal.filter(t => isInTimeRange(t.timestamp, 'hoy'));
+  }
+  
+  const statsEspera = validForStats.filter(t=>!t.atendido && !t.cancelado).sort((a,b)=>a.timestamp-b.timestamp);
+  const statsAtendidos = validForStats.filter(t=>t.atendido);
+  const statsCancelados = validForStats.filter(t=>t.cancelado);
+  
   let caja = 0;
-  atendidos.forEach(t => { if(t.costo_final) caja += parseInt(t.costo_final) });
+  statsAtendidos.forEach(t => { if(t.costo_final) caja += parseInt(t.costo_final) });
 
-  document.getElementById('st-espera').textContent=enEspera.length;
-  document.getElementById('st-atend').textContent=atendidos.length;
-  document.getElementById('st-canc').textContent=cancelados.length;
+  document.getElementById('st-espera').textContent=statsEspera.length;
+  document.getElementById('st-atend').textContent=statsAtendidos.length;
+  document.getElementById('st-canc').textContent=statsCancelados.length;
   document.getElementById('st-caja').textContent= '$' + caja;
 
   const lista = document.getElementById('lista-turnos');
-  const historialAll = [...atendidos, ...cancelados].sort((a,b)=>b.timestamp-a.timestamp);
   
-  const filtroRango = document.getElementById('filtro-fecha').value;
-  const filteredHistorial = historialAll.filter(t => isInTimeRange(t.timestamp, filtroRango));
-  
-  const arr = tabActual==='espera' ? enEspera : filteredHistorial;
+  const arr = tabActual==='espera' 
+      ? turnosGlobal.filter(t=>!t.atendido && !t.cancelado).sort((a,b)=>a.timestamp-b.timestamp)
+      : [...statsAtendidos, ...statsCancelados].sort((a,b)=>b.timestamp-a.timestamp);
   
   if(arr.length===0){lista.innerHTML='<div class="empty">No hay personas en esta lista</div>';return}
 
@@ -367,13 +386,28 @@ window.confirmarCobro = async function(){
   if(turnoACobrar) {
     const idTemp = turnoACobrar;
     cerrarModalCobro();
-    await supabase.from('turnos').update({ atendido: true, costo_final: parseado, barbero: 'Invitado' }).eq('id', idTemp);
+    const { error } = await supabase.from('turnos').update({ atendido: true, costo_final: parseado, barbero: 'Invitado' }).eq('id', idTemp);
+    if(error) {
+       alert("Hubo un problema al guardar el cobro: " + error.message);
+    } else {
+       // Actualización rápida en la pantalla sin depender del internet
+       const t = turnosGlobal.find(x => x.id === idTemp);
+       if(t) { t.atendido = true; t.costo_final = parseado; t.barbero = 'Invitado'; }
+       window.renderAdmin();
+    }
   }
 }
 
 window.cancelar = async function(id){
   if(confirm("¿Estás seguro que deseas CANCELAR a este cliente? Se borrará de la fila.")){
-     await supabase.from('turnos').update({ cancelado: true }).eq('id', id);
+     const { error } = await supabase.from('turnos').update({ cancelado: true }).eq('id', id);
+     if(error) {
+         alert("Error cancelando: " + error.message);
+     } else {
+         const t = turnosGlobal.find(x => x.id === id);
+         if(t) { t.cancelado = true; }
+         window.renderAdmin();
+     }
   }
 }
 
