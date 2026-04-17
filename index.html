@@ -36,23 +36,40 @@
   .btn-secondary{background:#fff;border:1px solid #ddd;color:#1a1a1a;margin-top:8px}
   .btn-secondary:hover{background:#f9f9f9}
   .btn-sm{width:auto;padding:6px 14px;font-size:12px;font-weight:600}
-  .turno-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #ebebeb;border-radius:12px;margin-bottom:8px;background:#fff}
-  .turno-row.atendido{opacity:.4}
-  .turno-num{min-width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;background:#E1F5EE;color:#0F6E56;flex-shrink:0}
-  .turno-row.atendido .turno-num{background:#f0f0f0;color:#aaa}
+  
+  /* UX y Avatares de lista */
+  .turno-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #ebebeb;border-radius:12px;margin-bottom:8px;background:#fff; transition: background 0.2s}
+  .turno-row:hover{background:#fafafa}
+  .turno-row.atendido{opacity:.5; filter: grayscale(50%)}
+  
+  .avatar { min-width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  .turno-num { min-width: 25px; height: 25px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; background: #f0f0f0; color: #888; flex-shrink: 0;}
+  
   .turno-info{flex:1;min-width:0}
   .turno-info .nombre{font-size:14px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .turno-info .tel{font-size:12px;color:#888}
   .turno-info .hora{font-size:11px;color:#bbb}
+  .tiempo-espera { font-size:10px; color:#c0392b; font-weight:600; margin-top:2px; display:inline-block; background:#fdf2f2; padding:2px 6px; border-radius:4px; }
+  
   .tag-actual{font-size:10px;padding:2px 7px;border-radius:20px;background:#E1F5EE;color:#085041;vertical-align:middle;margin-left:6px;font-weight:600}
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:1.25rem}
-  .stat{background:#fff;border:1px solid #ebebeb;border-radius:12px;padding:.75rem 0.25rem;text-align:center}
+  
+  /* Interfaz Hover 3D en Dashboard */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:1.25rem}
+  .stat{background:#fff;border:1px solid #ebebeb;border-radius:12px;padding:.75rem 0.25rem;text-align:center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);}
+  .stat:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.06); border-color:#d4d4d4;}
   .stat .sv{font-size:18px;font-weight:700;color:#1a1a1a}
   .stat .sk{font-size:10px;color:#888;margin-top:2px}
   .stat.active-card{border-color:#1D9E75; background:#f0fdf4; box-shadow:0 4px 10px rgba(29,158,117,0.15); transform:translateY(-2px);}
+  
   .empty{text-align:center;color:#bbb;font-size:14px;padding:2.5rem 0}
   .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
   .btn-link{background:none;border:none;color:#1D9E75;font-size:13px;cursor:pointer;padding:0;font-weight:500}
+  
+  /* Búsqueda en Vivo */
+  .search-container { position:relative; margin-bottom: 12px; }
+  .search-container input { padding-left: 36px; width:100%; font-size:14px;}
+  .search-container::before { content: '🔍'; position:absolute; left:12px; top:12px; font-size:14px; opacity:0.4; }
+  
   .aviso-banner{border-radius:10px;padding:1rem;margin-bottom:1rem;font-size:14px;display:none;line-height:1.5;text-align:center}
   .aviso-banner.show{display:block; animation: pop 0.3s ease-out}
   @keyframes pop { 0%{transform:scale(0.95); opacity:0} 100%{transform:scale(1); opacity:1} }
@@ -65,7 +82,13 @@
   .modal-content h3 { margin-bottom:1rem; font-size:18px; color:#1a1a1a; }
   .modal-btns { display:flex; gap:8px; }
   
-  /* Sistema de Toasts HTML nativo */
+  /* POS Exprés Buttons */
+  .pos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .btn-pos { display:flex; flex-direction:column; align-items:center; background:#f5f5f5; border: 1px solid #ddd; padding:12px 2px; border-radius:10px; cursor:pointer; transition: all 0.15s; }
+  .btn-pos:hover { background: #eef2ff; border-color: #a5b4fc; transform:scale(0.97); }
+  .btn-pos .pos-title { font-size:12px; font-weight:600; color:#555; }
+  .btn-pos .pos-price { font-size:15px; font-weight:800; color:#1a1a1a; margin-top:2px; }
+  
   .toast-container { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:1000; display:flex; flex-direction:column; gap:10px; pointer-events:none;}
   .toast { background:#333; color:#fff; padding:12px 20px; border-radius:30px; font-size:14px; box-shadow:0 10px 15px rgba(0,0,0,0.2); opacity:0; transform:translateY(20px); animation:toastIn 0.3s forwards, toastOut 0.3s forwards 2.7s; }
   .toast.success { background:#1D9E75; }
@@ -121,13 +144,15 @@
   </div>
   
   <div class="aviso-banner" id="aviso-1turno" style="background:#FFF3CD;color:#856404;font-size:16px;">
-    ⚠️ <strong style="display:block; font-size:20px; margin-bottom:4px">¡Prepárate!</strong> Solo falta 1 persona antes que tú. Ve acercándote.
+    ⚠️ <strong style="display:block; font-size:20px; margin-bottom:4px">¡Prepárate!</strong> Faltan muy pocos clientes antes que tú. ¡Ve acercándote al local!
   </div>
   <div class="aviso-banner" id="aviso-esturno" style="background:#1D9E75;color:#fff;font-size:16px;">
-    🎉 <strong style="display:block; font-size:24px; margin-bottom:4px">¡ES TU TURNO!</strong> Por favor pasa a la silla principal.
+    🎉 <strong style="display:block; font-size:22px; margin-bottom:4px">¡ES TU TURNO!</strong> Tienes 5 minutos para presentarte o perderás tu lugar.
   </div>
 
   <button class="btn btn-secondary" onclick="volverForm()">Registrar otra persona</button>
+  
+  <button class="btn btn-secondary" onclick="cancelarMiLugarCliente()" style="color:#c0392b; border-color:#f5c6c6; margin-top:8px;">❌ Cancelar mi lugar</button>
 </div>
 
 <!-- ===== PANEL DE ADMINISTRADOR ===== -->
@@ -143,10 +168,15 @@
     </div>
   </div>
   <div class="stats">
-    <div class="stat active-card" id="card-espera" onclick="setTab('espera')" style="cursor:pointer; transition:all 0.2s;"><div class="sv" id="st-espera">0</div><div class="sk">Fila</div></div>
-    <div class="stat" id="card-atend" onclick="setTab('atendidos')" style="cursor:pointer; transition:all 0.2s;"><div class="sv" id="st-atend">0</div><div class="sk">Atendidos</div></div>
-    <div class="stat" id="card-canc" onclick="setTab('cancelados')" style="cursor:pointer; transition:all 0.2s;"><div class="sv" id="st-canc">0</div><div class="sk">Cancelad.</div></div>
+    <div class="stat active-card" id="card-espera" onclick="setTab('espera')" style="cursor:pointer;"><div class="sv" id="st-espera">0</div><div class="sk">Fila</div></div>
+    <div class="stat" id="card-atend" onclick="setTab('atendidos')" style="cursor:pointer;"><div class="sv" id="st-atend">0</div><div class="sk">Atendidos</div></div>
+    <div class="stat" id="card-canc" onclick="setTab('cancelados')" style="cursor:pointer;"><div class="sv" id="st-canc">0</div><div class="sk">Cancelad.</div></div>
     <div class="stat"><div class="sv" id="st-caja" style="color:#0F6E56">$0</div><div class="sk">Caja</div></div>
+  </div>
+  
+  <!-- Buscador en tiempo real -->
+  <div class="search-container">
+    <input type="text" id="inp-search-turnos" placeholder="Buscar por nombre o teléfono..." onkeyup="window.renderAdmin()" />
   </div>
   
   <select id="filtro-fecha" onchange="window.renderAdmin()" style="display:none; margin-bottom:10px; width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-size:14px;">
@@ -174,14 +204,31 @@
   </div>
 </div>
 
-<!-- MODAL DE COBRO -->
+<!-- MODAL DE COBRO (REFACTORIZADO A POS) -->
 <div class="modal-overlay" id="modal-cobro">
   <div class="modal-content">
-    <h3>💸 Ingresa el monto a cobrar</h3>
-    <input type="number" id="inp-monto-cobro" placeholder="Ej. 85" value="85" />
+    <h3>💸 Cobrar Servicio</h3>
+    
+    <div class="pos-grid">
+       <div class="btn-pos" onclick="confirmarCobroDirecto(100)">
+          <span class="pos-title">Corte</span>
+          <span class="pos-price">$100</span>
+       </div>
+       <div class="btn-pos" onclick="confirmarCobroDirecto(80)">
+          <span class="pos-title">Barba</span>
+          <span class="pos-price">$80</span>
+       </div>
+       <div class="btn-pos" onclick="confirmarCobroDirecto(150)">
+          <span class="pos-title">Combo</span>
+          <span class="pos-price">$150</span>
+       </div>
+    </div>
+    
+    <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:8px; font-weight:700;">Monto personalizado u Otro</div>
+    <input type="number" id="inp-monto-cobro" placeholder="Escribe cantidad numérica..." />
     <div class="modal-btns">
       <button class="btn btn-secondary" style="margin-top:0" onclick="cerrarModalCobro()">Cancelar</button>
-      <button class="btn btn-primary" id="btn-cobrar" onclick="confirmarCobro()">Confirmar</button>
+      <button class="btn btn-primary" id="btn-cobrar" onclick="confirmarCobroPersonalizado()">Cobrar Personalizado</button>
     </div>
   </div>
 </div>
@@ -211,6 +258,34 @@ window.showToast = function(msg, type = 'success') {
   setTimeout(() => t.remove(), 3000); 
 }
 
+const getDbTime = (t) => {
+  if(t.created_at) return new Date(t.created_at).getTime();
+  if(t.timestamp) return t.timestamp; 
+  return 0; 
+};
+
+// --- Inteligencia UI Local ---
+function getColorFromHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 60%, 45%)`; 
+}
+
+function getInitials(name) {
+  const parts = name.trim().split(' ').filter(x => x.length > 0);
+  if(parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  if(parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return '?';
+}
+
+function getMinutesAgo(ms) {
+  const diffMinutes = Math.floor((Date.now() - ms) / 60000);
+  if(diffMinutes <= 0) return 'Ahora';
+  return `Hace ${diffMinutes} min`;
+}
+// ------------------------------
+
 window.registrar = async function(){
   const nombre = document.getElementById('inp-nombre').value.trim();
   const tel = document.getElementById('inp-tel').value.trim(); 
@@ -224,14 +299,15 @@ window.registrar = async function(){
   btn.textContent = 'Generando turno...';
 
   const numHoy = turnosGlobal.filter(t => {
-     const ts = new Date(t.timestamp);
+     const dbTimeMs = getDbTime(t);
+     const d = new Date(dbTimeMs);
      const hoy = new Date();
-     return ts.getDate() === hoy.getDate() && ts.getMonth() === hoy.getMonth() && ts.getFullYear() === hoy.getFullYear();
+     return d.getDate() === hoy.getDate() && d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear();
   }).length;
 
   const num = numHoy + 1;
   const hora = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-  const reg = { num, nombre, tel, hora, atendido: false, cancelado: false, costo_final: 0, timestamp: Date.now() };
+  const reg = { num, nombre, tel, hora, atendido: false, cancelado: false, costo_final: 0 };
   
   const { data, error } = await supabase.from('turnos').insert([reg]).select();
   
@@ -243,11 +319,28 @@ window.registrar = async function(){
   } else {
     document.getElementById('inp-nombre').value='';
     document.getElementById('inp-tel').value='';
-    // Guardar sesión en localStorage
     localStorage.setItem('skinny_turno_id', data[0].id);
-    
     turnosGlobal.push(data[0]);
     window.mostrarTurno(data[0]);
+  }
+}
+
+window.cancelarMiLugarCliente = async function() {
+  const tId = localStorage.getItem('skinny_turno_id');
+  if(!tId) return;
+  
+  if(confirm("¿Estás seguro que deseas abandonar la fila? Perderás tu lugar inmediatamente.")){
+    const { error } = await supabase.from('turnos').update({ cancelado: true }).eq('id', tId);
+    if(error){
+      window.showToast("Error de conexión, intenta nuevamente.", "error");
+    } else {
+      localStorage.removeItem('skinny_turno_id');
+      window.volverForm();
+      const meLocal = turnosGlobal.find(x => x.id == tId);
+      if(meLocal) meLocal.cancelado = true;
+      window.showToast("Turno cancelado exitosamente.", "success");
+      actualizarVistas(); 
+    }
   }
 }
 
@@ -263,13 +356,13 @@ window.mostrarTurno = function(reg){
 
 window.actualizarFaltantes = function(miNum){
   const hoy = new Date();
-  const esHoy = (ts) => {
-     const d = new Date(ts);
+  const esHoy = (tsMs) => {
+     const d = new Date(tsMs);
      return d.getDate()===hoy.getDate() && d.getMonth()===hoy.getMonth() && d.getFullYear()===hoy.getFullYear();
   };
   
-  const activos = turnosGlobal.filter(t=>!t.atendido && !t.cancelado && esHoy(t.timestamp)).sort((a,b)=>a.timestamp-b.timestamp);
-  const miReg = turnosGlobal.find(t=>t.num===miNum && esHoy(t.timestamp));
+  const activos = turnosGlobal.filter(t=>!t.atendido && !t.cancelado && esHoy(getDbTime(t))).sort((a,b)=>getDbTime(a)-getDbTime(b));
+  const miReg = turnosGlobal.find(t=>t.num===miNum && esHoy(getDbTime(t)));
   
   const box = document.getElementById('faltantes-box');
   const n = document.getElementById('faltantes-num');
@@ -297,8 +390,9 @@ window.actualizarFaltantes = function(miNum){
     box.style.background='#D1FAE5'; n.style.color='#065F46'; t.style.color='#065F46';
     document.getElementById('aviso-esturno').classList.add('show');
     document.getElementById('aviso-1turno').classList.remove('show');
-  } else if(faltantes === 1){
-    n.textContent='1'; t.textContent='persona antes que tú';
+  } else if(faltantes <= 3 && faltantes > 0){
+    n.textContent = faltantes; 
+    t.textContent = faltantes === 1 ? 'persona antes que tú' : 'personas antes que tú';
     box.style.background='#FFF3CD'; n.style.color='#856404'; t.style.color='#856404';
     document.getElementById('aviso-1turno').classList.add('show');
     document.getElementById('aviso-esturno').classList.remove('show');
@@ -321,7 +415,15 @@ window.volverForm = function(){
   window.showScreen('form-screen');
 }
 
-// === LÓGICA DE ADMINISTRADOR Y AUTH ===
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+    if(session) {
+      if(document.getElementById('admin-screen').style.display !== 'block') {
+         window.iniciarSesionUsuario(session.user);
+      }
+    }
+  }
+});
 
 window.irAdmin = async function(){
   try {
@@ -368,12 +470,8 @@ window.loginSupabase = async function(){
 
 window.iniciarSesionUsuario = function(user) {
   if(!user) return;
-  
-  // Extraer el nombre antes de la @ (ej. daniel@skinny.com -> Daniel)
   const prefix = user.email.split('@')[0];
   currentBarbero = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-  
-  // Si el usuario es angie o admin, tiene permisos para ver toda la caja
   isSuperAdmin = ['angie', 'admin'].includes(prefix.toLowerCase());
   
   const label = document.getElementById('lbl-barbero');
@@ -381,7 +479,7 @@ window.iniciarSesionUsuario = function(user) {
      (isSuperAdmin ? `<span style="font-size:10px;background:#1D9E75;color:white;padding:2px 6px;border-radius:4px;margin-left:4px;">Súper Admin</span>` : '');
 
   window.showScreen('admin-screen');
-  cargarDatosIniciales(true); // Carga histórico completo
+  cargarDatosIniciales(true);
 }
 
 window.salirAdmin = async function() {
@@ -390,7 +488,7 @@ window.salirAdmin = async function() {
   isSuperAdmin = false;
   window.showToast("Sesión cerrada", "success");
   window.volverForm();
-  cargarDatosIniciales(false); // Volver al modo público truncado
+  cargarDatosIniciales(false);
 }
 
 window.setTab = function(t){
@@ -398,34 +496,44 @@ window.setTab = function(t){
   document.getElementById('card-espera').className = 'stat' + (t==='espera'?' active-card':'');
   document.getElementById('card-atend').className = 'stat' + (t==='atendidos'?' active-card':'');
   document.getElementById('card-canc').className = 'stat' + (t==='cancelados'?' active-card':'');
-  document.getElementById('filtro-fecha').style.display = t!=='espera' ? 'block' : 'none';
+  
+  const filtrSelect = document.getElementById('filtro-fecha');
+  const searchInput = document.getElementById('inp-search-turnos');
+  
+  if(t !== 'espera'){
+      filtrSelect.style.display = 'block';
+      searchInput.placeholder = "Buscar historial por nombre...";
+  } else {
+      filtrSelect.style.display = 'none';
+      searchInput.placeholder = "Buscar en fila de espera...";
+  }
   window.renderAdmin();
 }
 
-function isInTimeRange(ts, range) {
+function isInTimeRange(tsMs, range) {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const yesterdayStart = todayStart - 86400000;
   
-  if(range === 'hoy') return ts >= todayStart;
-  if(range === 'ayer') return ts >= yesterdayStart && ts < todayStart;
-  if(range === '7dias') return ts >= (todayStart - 7 * 86400000);
-  return true;
+  if(range === 'hoy') return tsMs >= todayStart;
+  if(range === 'ayer') return tsMs >= yesterdayStart && tsMs < todayStart;
+  if(range === '7dias') return tsMs >= (todayStart - 7 * 86400000);
+  return true; 
 }
 
 window.renderAdmin = function(){
   const filtroRango = document.getElementById('filtro-fecha').value;
+  const searchTerm = document.getElementById('inp-search-turnos').value.toLowerCase().trim();
   
   let validForStats = turnosGlobal;
   if(tabActual === 'atendidos' || tabActual === 'cancelados') {
-      validForStats = turnosGlobal.filter(t => isInTimeRange(t.timestamp, filtroRango));
+      validForStats = turnosGlobal.filter(t => isInTimeRange(getDbTime(t), filtroRango));
   } else {
-      validForStats = turnosGlobal.filter(t => isInTimeRange(t.timestamp, 'hoy'));
+      validForStats = turnosGlobal.filter(t => isInTimeRange(getDbTime(t), 'hoy'));
   }
   
-  const statsEspera = validForStats.filter(t=>!t.atendido && !t.cancelado).sort((a,b)=>a.timestamp-b.timestamp);
+  const statsEspera = validForStats.filter(t=>!t.atendido && !t.cancelado).sort((a,b)=>getDbTime(a)-getDbTime(b));
   
-  // Segregación de Información: Un trabajador solo ve sus propios resultados
   const statsAtendidos = validForStats.filter(t => t.atendido && (isSuperAdmin || t.barbero === currentBarbero));
   const statsCancelados = validForStats.filter(t => t.cancelado && (isSuperAdmin || t.barbero === currentBarbero));
   
@@ -441,22 +549,35 @@ window.renderAdmin = function(){
   let arr = [];
   
   if (tabActual === 'espera') {
-      arr = turnosGlobal.filter(t=>!t.atendido && !t.cancelado).sort((a,b)=>a.timestamp-b.timestamp);
+      arr = statsEspera;
   } else if (tabActual === 'atendidos') {
-      arr = statsAtendidos.sort((a,b)=>b.timestamp-a.timestamp);
+      arr = statsAtendidos.sort((a,b)=>getDbTime(b)-getDbTime(a));
   } else if (tabActual === 'cancelados') {
-      arr = statsCancelados.sort((a,b)=>b.timestamp-a.timestamp);
+      arr = statsCancelados.sort((a,b)=>getDbTime(b)-getDbTime(a));
   }
   
-  if(arr.length===0){lista.innerHTML='<div class="empty">No hay personas en esta lista</div>';return}
+  // Appply Búsqueda en vivo
+  if(searchTerm !== "") {
+     arr = arr.filter(t => t.nombre.toLowerCase().includes(searchTerm) || (t.tel && t.tel.includes(searchTerm)));
+  }
+  
+  if(arr.length===0){lista.innerHTML='<div class="empty">No hay turnos con esos criterios</div>';return}
 
   lista.innerHTML = arr.map((r,i)=>{
     const esSiguiente = tabActual==='espera' && i===0;
     
+    // Genereación del Avatar Personalizado
+    const initials = getInitials(r.nombre);
+    const bgAvatar = getColorFromHash(r.nombre);
+    
+    // Renderizado del Cronómetro si no ha sido procesado
+    const isWaiting = (!r.atendido && !r.cancelado);
+    const cronometroHtml = isWaiting ? `<div class="tiempo-espera">⏱️ ${getMinutesAgo(getDbTime(r))}</div>` : '';
+
     let contenidoExtra = '';
     if(!r.atendido && !r.cancelado) {
        contenidoExtra = `
-         <button class="btn btn-primary btn-sm" onclick="window.atender('${r.id}')" style="background:#1D9E75; border-radius:6px;">💸 Cobrar</button>
+         <button class="btn btn-primary btn-sm" onclick="window.atender('${r.id}')" style="background:#1D9E75; border-radius:6px; margin-bottom:4px">💸 Cobrar</button>
          <button class="btn btn-secondary btn-sm" onclick="window.cancelar('${r.id}')" style="color:#c0392b; border-color:#f5c6c6; border-radius:6px; margin-top:0;">✖ Canc.</button>
        `;
     } else if (r.cancelado) {
@@ -467,12 +588,14 @@ window.renderAdmin = function(){
     }
 
     return `<div class="turno-row ${r.atendido||r.cancelado?'atendido':''}">
-      <div class="turno-num">${r.num}</div>
+      <div class="turno-num">#${r.num}</div>
+      <div class="avatar" style="background:${bgAvatar};">${initials}</div>
       <div class="turno-info">
         <div class="nombre">${r.nombre}${esSiguiente?'<span class="tag-actual">siguiente</span>':''}</div>
-        <div class="hora">Llegada: ${r.hora}</div>
+        <div class="hora" style="margin-bottom:2px">Ingreso: ${r.hora}</div>
+        ${cronometroHtml}
       </div>
-      <div class="acciones" style="flex-direction:row; gap:6px;">
+      <div class="acciones" style="flex-direction:column; align-items: flex-end">
         ${contenidoExtra}
       </div>
     </div>`;
@@ -483,8 +606,8 @@ let turnoACobrar = null;
 
 window.atender = function(id){
   turnoACobrar = id;
+  document.getElementById('inp-monto-cobro').value = '';
   document.getElementById('modal-cobro').classList.add('show');
-  document.getElementById('inp-monto-cobro').focus();
 }
 
 window.cerrarModalCobro = function(){
@@ -492,7 +615,12 @@ window.cerrarModalCobro = function(){
   turnoACobrar = null;
 }
 
-window.confirmarCobro = async function(){
+window.confirmarCobroDirecto = async function(montoFijo) {
+   document.getElementById('inp-monto-cobro').value = montoFijo;
+   window.confirmarCobroPersonalizado();
+}
+
+window.confirmarCobroPersonalizado = async function(){
   const monto = document.getElementById('inp-monto-cobro').value.trim();
   const parseado = parseInt(monto);
   if(isNaN(parseado) || parseado < 0) { window.showToast("Monto inválido", "error"); return; }
@@ -500,18 +628,17 @@ window.confirmarCobro = async function(){
   if(turnoACobrar) {
     const btn = document.getElementById('btn-cobrar');
     btn.classList.add('loading');
-    btn.textContent = 'Cobrando...';
+    btn.textContent = 'Procesando...';
     const idTemp = turnoACobrar;
     
-    // Al guardar, estampamos el verdadero nombre de la cuenta
     const { error } = await supabase.from('turnos').update({ atendido: true, costo_final: parseado, barbero: currentBarbero }).eq('id', idTemp);
     
     cerrarModalCobro();
     btn.classList.remove('loading');
-    btn.textContent = 'Confirmar';
+    btn.textContent = 'Cobrar Personalizado';
 
     if(error) {
-       window.showToast("Acceso denegado. " + error.message, "error");
+       window.showToast("Error de conexión. " + error.message, "error");
     } else {
        const t = turnosGlobal.find(x => x.id == idTemp);
        if(t) { t.atendido = true; t.costo_final = parseado; t.barbero = currentBarbero; }
@@ -522,10 +649,10 @@ window.confirmarCobro = async function(){
 }
 
 window.cancelar = async function(id){
-  if(confirm("¿Estás seguro que deseas CANCELAR a este cliente? Se borrará de la fila.")){
+  if(confirm("¿Estás seguro que deseas CANCELAR a este cliente? Se quitará de la fila.")){
      const { error } = await supabase.from('turnos').update({ cancelado: true }).eq('id', id);
      if(error) {
-         window.showToast("Acceso denegado para cancelar.", "error");
+         window.showToast("Error de red al cancelar.", "error");
      } else {
          const t = turnosGlobal.find(x => x.id == id);
          if(t) { t.cancelado = true; }
@@ -553,16 +680,10 @@ function tocarCampana() {
   } catch(e) {}
 }
 
-// ======================================
-// ESCUCHA EN TIEMPO REAL A SUPABASE
-// ======================================
-
 function verificarSesionCliente() {
-  // Comprobar si hay sesión estática en almacenamiento local
   const tId = localStorage.getItem('skinny_turno_id');
   if(tId) {
     const miTurno = turnosGlobal.find(x => x.id == tId);
-    // Si su ticket no ha vencido, saltar formulario
     if(miTurno && !miTurno.atendido && !miTurno.cancelado) {
        window.mostrarTurno(miTurno);
     }
@@ -570,12 +691,12 @@ function verificarSesionCliente() {
 }
 
 async function cargarDatosIniciales(forzarHistorialCompleto = false) {
-  let q = supabase.from('turnos').select('*').order('timestamp', { ascending: true });
+  let q = supabase.from('turnos').select('*').order('created_at', { ascending: true });
   
   if(!forzarHistorialCompleto) {
      const hoyEmpieza = new Date();
      hoyEmpieza.setHours(0,0,0,0);
-     q = q.gte('timestamp', hoyEmpieza.getTime());
+     q = q.gte('created_at', hoyEmpieza.toISOString());
   }
   
   const { data, error } = await q;
@@ -605,14 +726,11 @@ function actualizarVistas() {
   }
 }
 
-// Cargar al inicio de forma limitada
 cargarDatosIniciales(false);
 
-// Suscribirse a cambios en tiempo real
 supabase
   .channel('public:turnos')
   .on('postgres_changes', { event: '*', schema: 'public', table: 'turnos' }, payload => {
-    // Si viene un payload, no hay que pedir la BD de nuevo, optimizamos memoria y data!
     if(payload.eventType === 'INSERT') {
       turnosGlobal.push(payload.new);
       if(document.getElementById('admin-screen').style.display === 'block'){
@@ -629,6 +747,13 @@ supabase
     actualizarVistas();
   })
   .subscribe()
+
+// Refresco del tiempo cada minuto local
+setInterval(() => {
+  if(document.getElementById('admin-screen').style.display === 'block'){
+      window.renderAdmin();
+  }
+}, 60000);
 
 </script>
 </body>
