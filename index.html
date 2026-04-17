@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Skinny Barbershop - Turnos</title>
+<!-- CHART.JS LIBRERIA OFICIAL -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
@@ -37,36 +40,33 @@
   .btn-secondary:hover{background:#f9f9f9}
   .btn-sm{width:auto;padding:6px 14px;font-size:12px;font-weight:600}
   
-  /* UX y Avatares de lista */
+  /* UX y Avatares */
   .turno-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #ebebeb;border-radius:12px;margin-bottom:8px;background:#fff; transition: background 0.2s}
   .turno-row:hover{background:#fafafa}
   .turno-row.atendido{opacity:.5; filter: grayscale(50%)}
-  
   .avatar { min-width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
   .turno-num { min-width: 25px; height: 25px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; background: #f0f0f0; color: #888; flex-shrink: 0;}
-  
   .turno-info{flex:1;min-width:0}
   .turno-info .nombre{font-size:14px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .turno-info .tel{font-size:12px;color:#888}
   .turno-info .hora{font-size:11px;color:#bbb}
   .tiempo-espera { font-size:10px; color:#c0392b; font-weight:600; margin-top:2px; display:inline-block; background:#fdf2f2; padding:2px 6px; border-radius:4px; }
-  
   .tag-actual{font-size:10px;padding:2px 7px;border-radius:20px;background:#E1F5EE;color:#085041;vertical-align:middle;margin-left:6px;font-weight:600}
   
-  /* Interfaz Hover 3D en Dashboard */
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:1.25rem}
-  .stat{background:#fff;border:1px solid #ebebeb;border-radius:12px;padding:.75rem 0.25rem;text-align:center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);}
+  /* Hover 3D en Dashboard */
+  .stats{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:1.25rem; justify-content:center;}
+  .stat{flex: 1 1 18%; min-width:65px; background:#fff;border:1px solid #ebebeb;border-radius:12px;padding:.75rem 0.25rem;text-align:center; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);}
   .stat:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.06); border-color:#d4d4d4;}
   .stat .sv{font-size:18px;font-weight:700;color:#1a1a1a}
   .stat .sk{font-size:10px;color:#888;margin-top:2px}
   .stat.active-card{border-color:#1D9E75; background:#f0fdf4; box-shadow:0 4px 10px rgba(29,158,117,0.15); transform:translateY(-2px);}
+  .caja-tooltip { font-size:9px; color:#555; margin-top:4px; border-top:1px dashed #ddd; padding-top:4px; display:inline-block; }
   
   .empty{text-align:center;color:#bbb;font-size:14px;padding:2.5rem 0}
   .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
   .btn-link{background:none;border:none;color:#1D9E75;font-size:13px;cursor:pointer;padding:0;font-weight:500}
   
-  /* Búsqueda en Vivo */
-  .search-container { position:relative; margin-bottom: 12px; }
+  .search-container { position:relative; margin-bottom: 12px; width:100%; }
   .search-container input { padding-left: 36px; width:100%; font-size:14px;}
   .search-container::before { content: '🔍'; position:absolute; left:12px; top:12px; font-size:14px; opacity:0.4; }
   
@@ -82,7 +82,6 @@
   .modal-content h3 { margin-bottom:1rem; font-size:18px; color:#1a1a1a; }
   .modal-btns { display:flex; gap:8px; }
   
-  /* POS Exprés Buttons */
   .pos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
   .btn-pos { display:flex; flex-direction:column; align-items:center; background:#f5f5f5; border: 1px solid #ddd; padding:12px 2px; border-radius:10px; cursor:pointer; transition: all 0.15s; }
   .btn-pos:hover { background: #eef2ff; border-color: #a5b4fc; transform:scale(0.97); }
@@ -151,7 +150,6 @@
   </div>
 
   <button class="btn btn-secondary" onclick="volverForm()">Registrar otra persona</button>
-  
   <button class="btn btn-secondary" onclick="cancelarMiLugarCliente()" style="color:#c0392b; border-color:#f5c6c6; margin-top:8px;">❌ Cancelar mi lugar</button>
 </div>
 
@@ -167,16 +165,25 @@
       <button class="btn-link" onclick="volverForm()">← Volver</button>
     </div>
   </div>
+  
+  <!-- DASHBOARD MÍTICOS -->
   <div class="stats">
     <div class="stat active-card" id="card-espera" onclick="setTab('espera')" style="cursor:pointer;"><div class="sv" id="st-espera">0</div><div class="sk">Fila</div></div>
     <div class="stat" id="card-atend" onclick="setTab('atendidos')" style="cursor:pointer;"><div class="sv" id="st-atend">0</div><div class="sk">Atendidos</div></div>
     <div class="stat" id="card-canc" onclick="setTab('cancelados')" style="cursor:pointer;"><div class="sv" id="st-canc">0</div><div class="sk">Cancelad.</div></div>
-    <div class="stat"><div class="sv" id="st-caja" style="color:#0F6E56">$0</div><div class="sk">Caja</div></div>
+    
+    <!-- NUEVA PESTAÑA MÉTRICAS PARA ADMINS -->
+    <div class="stat" id="card-metricas" onclick="setTab('metricas')" style="cursor:pointer; display:none;"><div class="sv" id="st-metricas" style="color:#f39c12">📊</div><div class="sk">Rendimiento</div></div>
+    
+    <div class="stat">
+        <div class="sv" id="st-caja" style="color:#0F6E56">$0</div><div class="sk">Caja Total</div>
+        <div id="st-caja-desglose"></div>
+    </div>
   </div>
   
-  <!-- Buscador en tiempo real -->
-  <div class="search-container">
-    <input type="text" id="inp-search-turnos" placeholder="Buscar por nombre o teléfono..." onkeyup="window.renderAdmin()" />
+  <!-- Herramientas Data-Export CSV -->
+  <div id="tools-atendidos" style="display:none; text-align:right; margin-bottom:10px;">
+    <button class="btn btn-sm" style="background:#1D9E75; color:white; border-radius:6px; box-shadow:0 3px 6px rgba(0,0,0,0.1);" onclick="descargarCSV()">⬇️ Descargar Reporte CSV</button>
   </div>
   
   <select id="filtro-fecha" onchange="window.renderAdmin()" style="display:none; margin-bottom:10px; width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-size:14px;">
@@ -185,8 +192,20 @@
     <option value="7dias">📅 Últimos 7 días</option>
     <option value="todos">📅 Todo el historial</option>
   </select>
-  
+
+  <!-- Buscador en tiempo real -->
+  <div class="search-container" id="search-container-box">
+    <input type="text" id="inp-search-turnos" placeholder="Buscar por nombre o teléfono..." onkeyup="window.renderAdmin()" />
+  </div>
+
   <div id="lista-turnos"></div>
+  
+  <!-- CONTENEDOR CHART.JS -->
+  <div id="metricas-container" style="display:none; background:#fff; padding:15px; border-radius:12px; border:1px solid #ddd; box-shadow:0 4px 10px rgba(0,0,0,0.05)">
+      <h3 style="font-size:14px; text-align:center; color:#555; margin-bottom:12px;">Desempeño de Empleados (Cortes Realizados)</h3>
+      <canvas id="graficaIngresos"></canvas>
+  </div>
+  
   <div class="divider"></div>
 </div>
 
@@ -228,7 +247,7 @@
     <input type="number" id="inp-monto-cobro" placeholder="Escribe cantidad numérica..." />
     <div class="modal-btns">
       <button class="btn btn-secondary" style="margin-top:0" onclick="cerrarModalCobro()">Cancelar</button>
-      <button class="btn btn-primary" id="btn-cobrar" onclick="confirmarCobroPersonalizado()">Cobrar Personalizado</button>
+      <button class="btn btn-primary" id="btn-cobrar" onclick="confirmarCobroPersonalizado()">Cobrar Manual</button>
     </div>
   </div>
 </div>
@@ -240,6 +259,11 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabaseUrl = 'https://drsjneaesdklijaiwgnh.supabase.co'
 const supabaseKey = 'sb_publishable_X7RwnfyfS1lM5IIpreN53g_Y0FBIuWD'
 const supabase = createClient(supabaseUrl, supabaseKey)
+
+// --- CONSTANTES DE NEGOCIO (Fase 3 BI) ---
+const TIEMPO_PROMEDIO_MIN = 25; 
+let chartInstance = null; // Instancia global Chart.js
+// -----------------------------------------
 
 let tabActual = 'espera';
 let turnosGlobal = [];
@@ -258,15 +282,26 @@ window.showToast = function(msg, type = 'success') {
   setTimeout(() => t.remove(), 3000); 
 }
 
-// --- Inteligencia UI Local ---
 const getDbTime = (t) => {
   if (t.created_at) return new Date(t.created_at).getTime();
   if (t.timestamp) {
      if (typeof t.timestamp === 'string' && t.timestamp.includes('-')) return new Date(t.timestamp).getTime();
      return parseInt(t.timestamp);
   }
-  return Date.now(); // Fallback absoluto
+  return Date.now(); 
 };
+
+window.isInTimeRange = function(tsMs, range) {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const yesterdayStart = todayStart - 86400000;
+  
+  if(range === 'hoy') return tsMs >= todayStart;
+  if(range === 'ayer') return tsMs >= yesterdayStart && tsMs < todayStart;
+  if(range === '7dias') return tsMs >= (todayStart - 7 * 86400000);
+  return true; 
+}
+
 function getColorFromHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -286,7 +321,6 @@ function getMinutesAgo(ms) {
   if(diffMinutes <= 0) return 'Ahora';
   return `Hace ${diffMinutes} min`;
 }
-// ------------------------------
 
 window.registrar = async function(){
   const nombre = document.getElementById('inp-nombre').value.trim();
@@ -330,11 +364,10 @@ window.registrar = async function(){
 window.cancelarMiLugarCliente = async function() {
   const tId = localStorage.getItem('skinny_turno_id');
   if(!tId) return;
-  
   if(confirm("¿Estás seguro que deseas abandonar la fila? Perderás tu lugar inmediatamente.")){
     const { error } = await supabase.from('turnos').update({ cancelado: true }).eq('id', tId);
     if(error){
-      window.showToast("Error de conexión, intenta nuevamente.", "error");
+      window.showToast("Error, intenta nuevamente.", "error");
     } else {
       localStorage.removeItem('skinny_turno_id');
       window.volverForm();
@@ -362,10 +395,8 @@ window.actualizarFaltantes = function(miNum){
      const d = new Date(tsMs);
      return d.getDate()===hoy.getDate() && d.getMonth()===hoy.getMonth() && d.getFullYear()===hoy.getFullYear();
   };
-  
   const activos = turnosGlobal.filter(t=>!t.atendido && !t.cancelado && esHoy(getDbTime(t))).sort((a,b)=>getDbTime(a)-getDbTime(b));
   const miReg = turnosGlobal.find(t=>t.num===miNum && esHoy(getDbTime(t)));
-  
   const box = document.getElementById('faltantes-box');
   const n = document.getElementById('faltantes-num');
   const t = document.getElementById('faltantes-txt');
@@ -376,7 +407,6 @@ window.actualizarFaltantes = function(miNum){
     ['aviso-esturno','aviso-1turno'].forEach(id=>document.getElementById(id).classList.remove('show'));
     return;
   }
-
   if(miReg && miReg.atendido){
     n.textContent='¡Finalizado!'; t.textContent='El servicio ha concluido';
     box.style.background='#D1FAE5'; n.style.color='#065F46'; t.style.color='#065F46';
@@ -394,13 +424,19 @@ window.actualizarFaltantes = function(miNum){
     document.getElementById('aviso-1turno').classList.remove('show');
   } else if(faltantes <= 3 && faltantes > 0){
     n.textContent = faltantes; 
-    t.textContent = faltantes === 1 ? 'persona antes que tú' : 'personas antes que tú';
+    t.innerHTML = `${faltantes === 1 ? 'persona' : 'personas'} antes que tú <br><span style="font-size:11px; color:#856404; display:inline-block; margin-top:4px; font-weight:600;">⏳ Tiempo estimado de espera: ~ ${faltantes * TIEMPO_PROMEDIO_MIN} min</span>`;
     box.style.background='#FFF3CD'; n.style.color='#856404'; t.style.color='#856404';
     document.getElementById('aviso-1turno').classList.add('show');
     document.getElementById('aviso-esturno').classList.remove('show');
   } else {
     n.textContent = pos >= 0 ? faltantes : "—"; 
-    t.textContent = faltantes === 1 ? 'persona antes que tú' : 'personas antes que tú';
+    
+    let subTxtInfo = '';
+    if (faltantes > 0) {
+        subTxtInfo = `<br><span style="font-size:11px; color:#1D4ED8; opacity:0.8; display:inline-block; margin-top:4px; font-weight:600;">⏳ Tiempo estimado de espera: ~ ${faltantes * TIEMPO_PROMEDIO_MIN} min</span>`;
+    }
+    
+    t.innerHTML = `${faltantes === 1 ? 'persona antes que tú' : 'personas antes que tú'} ${subTxtInfo}`;
     box.style.background='#EFF6FF'; n.style.color='#1D4ED8'; t.style.color='#1D4ED8';
     ['aviso-esturno','aviso-1turno'].forEach(id=>document.getElementById(id).classList.remove('show'));
   }
@@ -446,7 +482,6 @@ window.loginSupabase = async function(){
   const pass = document.getElementById('inp-admin-pass').value;
   const err = document.getElementById('login-error');
   const btn = document.getElementById('btn-login');
-  
   if(!email || !pass) return;
   err.style.display = 'none';
   btn.classList.add('loading');
@@ -476,6 +511,10 @@ window.iniciarSesionUsuario = function(user) {
   currentBarbero = prefix.charAt(0).toUpperCase() + prefix.slice(1);
   isSuperAdmin = ['angie', 'admin'].includes(prefix.toLowerCase());
   
+  if (isSuperAdmin) {
+     document.getElementById('card-metricas').style.display = 'block';
+  }
+  
   const label = document.getElementById('lbl-barbero');
   label.innerHTML = `👤 <b>${currentBarbero}</b> ` + 
      (isSuperAdmin ? `<span style="font-size:10px;background:#1D9E75;color:white;padding:2px 6px;border-radius:4px;margin-left:4px;">Súper Admin</span>` : '');
@@ -488,6 +527,7 @@ window.salirAdmin = async function() {
   await supabase.auth.signOut();
   currentBarbero = 'Invitado';
   isSuperAdmin = false;
+  document.getElementById('card-metricas').style.display = 'none';
   window.showToast("Sesión cerrada", "success");
   window.volverForm();
   cargarDatosIniciales(false);
@@ -498,29 +538,115 @@ window.setTab = function(t){
   document.getElementById('card-espera').className = 'stat' + (t==='espera'?' active-card':'');
   document.getElementById('card-atend').className = 'stat' + (t==='atendidos'?' active-card':'');
   document.getElementById('card-canc').className = 'stat' + (t==='cancelados'?' active-card':'');
+  document.getElementById('card-metricas').className = 'stat' + (t==='metricas'?' active-card':'');
   
   const filtrSelect = document.getElementById('filtro-fecha');
-  const searchInput = document.getElementById('inp-search-turnos');
+  const searchInput = document.getElementById('search-container-box');
+  const toolsA = document.getElementById('tools-atendidos');
+  const listC = document.getElementById('lista-turnos');
+  const metricC = document.getElementById('metricas-container');
   
-  if(t !== 'espera'){
+  // Toggle Herramientas Atendidos (Exportación)
+  toolsA.style.display = (t === 'atendidos') ? 'block' : 'none';
+  
+  // Toggle Métricas
+  if (t === 'metricas') {
+      listC.style.display = 'none';
+      metricC.style.display = 'block';
+      searchInput.style.display = 'none';
       filtrSelect.style.display = 'block';
-      searchInput.placeholder = "Buscar historial por nombre...";
   } else {
-      filtrSelect.style.display = 'none';
-      searchInput.placeholder = "Buscar en fila de espera...";
+      listC.style.display = 'block';
+      metricC.style.display = 'none';
+      
+      if(t !== 'espera'){
+          filtrSelect.style.display = 'block';
+          searchInput.style.display = 'block';
+          document.getElementById('inp-search-turnos').placeholder = "Buscar historial por nombre...";
+      } else {
+          filtrSelect.style.display = 'none';
+          searchInput.style.display = 'block';
+          document.getElementById('inp-search-turnos').placeholder = "Buscar en fila de espera...";
+      }
   }
   window.renderAdmin();
 }
 
-function isInTimeRange(tsMs, range) {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const yesterdayStart = todayStart - 86400000;
+window.descargarCSV = function() {
+  const filtroRango = document.getElementById('filtro-fecha').value;
+  const searchTerm = document.getElementById('inp-search-turnos').value.toLowerCase().trim();
   
-  if(range === 'hoy') return tsMs >= todayStart;
-  if(range === 'ayer') return tsMs >= yesterdayStart && tsMs < todayStart;
-  if(range === '7dias') return tsMs >= (todayStart - 7 * 86400000);
-  return true; 
+  let validForStats = turnosGlobal.filter(t => window.isInTimeRange(getDbTime(t), filtroRango));
+  let arr = validForStats.filter(t => t.atendido && (isSuperAdmin || t.barbero === currentBarbero)).sort((a,b)=>getDbTime(b)-getDbTime(a));
+  
+  if(searchTerm !== "") {
+     arr = arr.filter(t => t.nombre.toLowerCase().includes(searchTerm) || (t.tel && t.tel.includes(searchTerm)));
+  }
+
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "ID Turno,Cliente,Telefono,Hora Llegada,Hora Servicio DB,Barbero,Ingreso ($)\n";
+  
+  arr.forEach((r) => {
+      const dbH = new Date(getDbTime(r)).toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'});
+      const safeNombre = `"${r.nombre.replace(/"/g, '""')}"`;
+      
+      let arrRow = [
+         r.num,
+         safeNombre,
+         r.tel || 'N/A',
+         r.hora,
+         dbH,
+         r.barbero || 'Anónimo',
+         r.costo_final || 0
+      ];
+      csvContent += arrRow.join(",") + "\n";
+  });
+  
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `Reporte_Ingresos_Barberia_${new Date().toLocaleDateString('es-MX').replace(/\//g,'-')}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function processChart(datos) {
+    if (chartInstance) { chartInstance.destroy(); }
+    const ctx = document.getElementById('graficaIngresos');
+    if(!ctx) return;
+    
+    let dictStats = {};
+    datos.forEach(d => {
+       if(d.atendido) {
+          let b = d.barbero || 'Anónimo';
+          if(!dictStats[b]) dictStats[b] = 0;
+          dictStats[b] += 1;
+       }
+    });
+
+    const labels = Object.keys(dictStats);
+    const dataNum = Object.values(dictStats);
+    const bgColors = labels.map(l => getColorFromHash(l));
+
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Cortes Realizados',
+                data: dataNum,
+                backgroundColor: bgColors,
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } },
+            plugins: { legend: { display: false } }
+        }
+    });
 }
 
 window.renderAdmin = function(){
@@ -528,24 +654,46 @@ window.renderAdmin = function(){
   const searchTerm = document.getElementById('inp-search-turnos').value.toLowerCase().trim();
   
   let validForStats = turnosGlobal;
-  if(tabActual === 'atendidos' || tabActual === 'cancelados') {
-      validForStats = turnosGlobal.filter(t => isInTimeRange(getDbTime(t), filtroRango));
+  if(tabActual === 'atendidos' || tabActual === 'cancelados' || tabActual === 'metricas') {
+      validForStats = turnosGlobal.filter(t => window.isInTimeRange(getDbTime(t), filtroRango));
   } else {
-      validForStats = turnosGlobal.filter(t => isInTimeRange(getDbTime(t), 'hoy'));
+      validForStats = turnosGlobal.filter(t => window.isInTimeRange(getDbTime(t), 'hoy'));
   }
   
   const statsEspera = validForStats.filter(t=>!t.atendido && !t.cancelado).sort((a,b)=>getDbTime(a)-getDbTime(b));
-  
   const statsAtendidos = validForStats.filter(t => t.atendido && (isSuperAdmin || t.barbero === currentBarbero));
   const statsCancelados = validForStats.filter(t => t.cancelado && (isSuperAdmin || t.barbero === currentBarbero));
   
-  let caja = 0;
-  statsAtendidos.forEach(t => { if(t.costo_final) caja += parseInt(t.costo_final) });
+  // BI: Desglose de Caja Acumulado
+  let cajaTotal = 0;
+  let desgloseBox = {};
+  
+  statsAtendidos.forEach(t => { 
+      if(t.costo_final) {
+         cajaTotal += parseInt(t.costo_final);
+         let b = t.barbero || 'Anónimo';
+         if(!desgloseBox[b]) desgloseBox[b] = 0;
+         desgloseBox[b] += parseInt(t.costo_final);
+      } 
+  });
 
   document.getElementById('st-espera').textContent=statsEspera.length;
   document.getElementById('st-atend').textContent=statsAtendidos.length;
   document.getElementById('st-canc').textContent=statsCancelados.length;
-  document.getElementById('st-caja').textContent= '$' + caja;
+  
+  document.getElementById('st-caja').textContent= '$' + cajaTotal;
+  const boxDesglose = document.getElementById('st-caja-desglose');
+  if(isSuperAdmin && Object.keys(desgloseBox).length > 0) {
+     boxDesglose.innerHTML = `<div class="caja-tooltip">${Object.entries(desgloseBox).map(([k,v])=>`<b style="color:#0F6E56">${k}:</b> $${v}`).join('<br>')}</div>`;
+  } else {
+     boxDesglose.innerHTML = '';
+  }
+
+  // Si estamos en la pestaña métricas, solo actualizamos el canvas
+  if (tabActual === 'metricas') {
+      if(isSuperAdmin) processChart(statsAtendidos);
+      return; // Stop rendering list
+  }
 
   const lista = document.getElementById('lista-turnos');
   let arr = [];
@@ -558,21 +706,17 @@ window.renderAdmin = function(){
       arr = statsCancelados.sort((a,b)=>getDbTime(b)-getDbTime(a));
   }
   
-  // Appply Búsqueda en vivo
   if(searchTerm !== "") {
      arr = arr.filter(t => t.nombre.toLowerCase().includes(searchTerm) || (t.tel && t.tel.includes(searchTerm)));
   }
   
-  if(arr.length===0){lista.innerHTML='<div class="empty">No hay turnos con esos criterios</div>';return}
+  if(arr.length===0){lista.innerHTML='<div class="empty">No hay datos en esta vista</div>';return}
 
   lista.innerHTML = arr.map((r,i)=>{
     const esSiguiente = tabActual==='espera' && i===0;
-    
-    // Genereación del Avatar Personalizado
     const initials = getInitials(r.nombre);
     const bgAvatar = getColorFromHash(r.nombre);
     
-    // Renderizado del Cronómetro si no ha sido procesado
     const isWaiting = (!r.atendido && !r.cancelado);
     const cronometroHtml = isWaiting ? `<div class="tiempo-espera">⏱️ ${getMinutesAgo(getDbTime(r))}</div>` : '';
 
@@ -637,7 +781,7 @@ window.confirmarCobroPersonalizado = async function(){
     
     cerrarModalCobro();
     btn.classList.remove('loading');
-    btn.textContent = 'Cobrar Personalizado';
+    btn.textContent = 'Cobrar Manual';
 
     if(error) {
        window.showToast("Error de conexión. " + error.message, "error");
@@ -693,28 +837,19 @@ function verificarSesionCliente() {
 }
 
 async function cargarDatosIniciales(forzarHistorialCompleto = false) {
-  // Obtenemos los últimos 1000 registros puros sin filtros que puedan romper PostgREST
-  const { data, error } = await supabase.from('turnos').select('*').limit(1000);
-  
+  const { data, error } = await supabase.from('turnos').select('*').limit(1500);
   if(error) {
-     window.showToast("Error de conexión a Base de Datos: " + error.message, "error");
-     console.error("Supabase Error:", error);
+     window.showToast("Error de Base de Datos: " + error.message, "error");
      return;
   }
-  
   if (data) {
     turnosGlobal = data;
-    
-    // 1. ORDENAMIENTO LOCAL JS
     turnosGlobal.sort((a,b) => getDbTime(a) - getDbTime(b));
-    
-    // 2. FILTRADO LOCAL JS (Delega el trabajo al celular, no a la nube)
     if(!forzarHistorialCompleto) {
        const hoyEmpieza = new Date();
        hoyEmpieza.setHours(0,0,0,0);
        turnosGlobal = turnosGlobal.filter(t => getDbTime(t) >= hoyEmpieza.getTime());
     }
-
     actualizarVistas();
     if(!forzarHistorialCompleto) verificarSesionCliente();
   }
@@ -722,21 +857,14 @@ async function cargarDatosIniciales(forzarHistorialCompleto = false) {
 
 function actualizarVistas() {
   const enEspera = turnosGlobal.filter(t=>!t.atendido && !t.cancelado);
-  
   if (countEsperaAnterior !== -1 && enEspera.length > countEsperaAnterior) {
-    if(document.getElementById('admin-screen').style.display === 'block'){
-       tocarCampana();
-    }
+    if(document.getElementById('admin-screen').style.display === 'block'){ tocarCampana(); }
   }
   countEsperaAnterior = enEspera.length;
 
-  if(document.getElementById('admin-screen').style.display === 'block'){
-    window.renderAdmin();
-  }
+  if(document.getElementById('admin-screen').style.display === 'block'){ window.renderAdmin(); }
   const turnoPantalla = parseInt(document.getElementById('mi-turno').textContent);
-  if(!isNaN(turnoPantalla)){
-    window.actualizarFaltantes(turnoPantalla);
-  }
+  if(!isNaN(turnoPantalla)){ window.actualizarFaltantes(turnoPantalla); }
 }
 
 cargarDatosIniciales(false);
@@ -751,9 +879,7 @@ supabase
       }
     } else if(payload.eventType === 'UPDATE') {
       const idx = turnosGlobal.findIndex(x => x.id == payload.new.id);
-      if(idx !== -1) {
-         turnosGlobal[idx] = payload.new;
-      }
+      if(idx !== -1) { turnosGlobal[idx] = payload.new; }
     } else if (payload.eventType === 'DELETE') {
       turnosGlobal = turnosGlobal.filter(x => x.id != payload.old.id);
     }
@@ -761,11 +887,8 @@ supabase
   })
   .subscribe()
 
-// Refresco del tiempo cada minuto local
 setInterval(() => {
-  if(document.getElementById('admin-screen').style.display === 'block'){
-      window.renderAdmin();
-  }
+  if(document.getElementById('admin-screen').style.display === 'block'){ window.renderAdmin(); }
 }, 60000);
 
 </script>
